@@ -4,7 +4,7 @@ import sys
 
 from rgbmatrix import RGBMatrix, RGBMatrixOptions, graphics
 
-def displaytext(text, matrix, font, line, textColor):
+def displayText(text, matrix, font, line, textColor):
     offscreen_canvas = matrix.CreateFrameCanvas()
     pos = offscreen_canvas.width
     
