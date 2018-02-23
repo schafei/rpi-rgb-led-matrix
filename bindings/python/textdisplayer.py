@@ -4,7 +4,7 @@ import sys
 
 from rgbmatrix import RGBMatrix, RGBMatrixOptions, graphics
 
-class text-displayer():
+class textdisplayer():
 
   def __init__(self):
     # Configuration for the matrix
@@ -19,14 +19,19 @@ class text-displayer():
     self.matrix = RGBMatrix(options = options)
 
     self.font = graphics.Font()
-    self.font.LoadFont("../../../fonts/helvR12.bdf")
+    self.font.LoadFont("../../fonts/helvR12.bdf")
     self.textColor = graphics.Color(0, 0, 255)
+    print("init done")
+  def displayText(self, text, line):
+    print("text:" + text)
 
-  def displaytext(self, text, line):
     offscreen_canvas = self.matrix.CreateFrameCanvas()
+    print("Create is done")
     pos = offscreen_canvas.width
-    
+   
+    print("before loop") 
     while True:
+        print("loop")
         offscreen_canvas.Clear()
         len = graphics.DrawText(offscreen_canvas, self.font, pos, 2 + line * 12, self.textColor, text)
         pos -= 1

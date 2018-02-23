@@ -1,13 +1,14 @@
+#!/usr/bin/env python
 from flask import Flask
 from flask_restful import reqparse, abort, Api, Resource
-from viking-visualizer import text-displayer
+from textdisplayer import textdisplayer
 
 app = Flask(__name__)
 api = Api(app)
 
 DISPLAY = { 'text': 'Hello Vikings :-)', 'status': 'on' }
 
-textDisplayer = text-displayer()
+textDisplayer = textdisplayer()
 
 parser = reqparse.RequestParser()
 parser.add_argument('text')
