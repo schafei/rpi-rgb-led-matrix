@@ -31,7 +31,7 @@ try:
             pos = offscreen_canvas.width
 
         time.sleep(0.05)
-        offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
+        offscreen_canvas = matrix.SwapOnVSync(offscreen_canvas)
         
 except KeyboardInterrupt:
     sys.exit(0)
