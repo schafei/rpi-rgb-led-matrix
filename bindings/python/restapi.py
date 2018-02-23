@@ -1,38 +1,38 @@
 #!/usr/bin/env python
-from flask import Flask
-from flask_restful import reqparse, abort, Api, Resource
-from textdisplayer import textdisplayer
+from flask  import Flask, jsonify, request, render_template
+#from textdisplayer import textdisplayer
 
-app = Flask(__name__)
-api = Api(app)
+display = { 'text': 'Hello Vikings :-)', 'status': 'on' }
+#textDisplayer = textdisplayer()
+mainRoute = '/display'
+app = Flask(__name__, static_url_path = mainRoute)
 
-DISPLAY = { 'text': 'Hello Vikings :-)', 'status': 'on' }
+def request_wants_json():
+    best = request.accept_mimetypes.best_match(['application/json', 'text/html'])
+    return best == 'application/json' and request.accept_mimetypes[best] > request.accept_mimetypes['text/html']
 
-textDisplayer = textdisplayer()
+@app.route(mainRoute + '/', methods=['GET','POST','PUT','DELETE'])
+def routing():
 
-parser = reqparse.RequestParser()
-parser.add_argument('text')
-parser.add_argument('status')
+    if request_wants_json(): json = True
+    else:                    json = False
 
-class Display(Resource):
-    def get(self):
-        return DISPLAY
+    if request.method == 'GET':
+        result = { display['text'], display['status'] } 
+        if json: return jsonify(result)
+        else:    return '{ ' + display['text'] + ', ' + display['status'] + ' }' 
 
-    def put(self):
-        args = parser.parse_args()
-        text = args['text']
-        status = args['status']
-        if text != None:
-            DISPLAY['text'] = text
-            textDisplayer.displayText(text, 1)
-        if status != None:
-            DISPLAY['status'] = status
-        return text, 201
+    elif request.method == 'PUT':
+        text = request.form.get('text')
+        status = request.form.get('status')
+        if text:
+            display['text'] = text
+            #textDisplayer.displayText(text, 1)
+        if status:
+            display['status'] = status
 
-##
-## Actually setup the Api resource routing here
-##
-api.add_resource(Display, '/display')
+        result = { display['text'], display['status'] }
+        return jsonify({"status": False}), 201
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug = False, host = '0.0.0.0', threaded = False, use_reloader = True)
