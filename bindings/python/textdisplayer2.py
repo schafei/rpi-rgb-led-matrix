@@ -1,13 +1,58 @@
 #!/usr/bin/env python
 import time
 import sys
+import threading
 
 from rgbmatrix import RGBMatrix, RGBMatrixOptions, graphics
+
+class DisplayerThread(threading.Thread):
+
+  stopFlag = False
+
+  def __init__(self, canvas, matrix, text, textcolor, bgcolor, scroll, blink):
+    super(DisplayerThread, self).__init__()
+    self.canvas=canvas
+    self.matrix=matrix
+    self.text=text
+    self.textcolor=textcolor
+    self.bgcolor=bgcolor
+    self.scroll=scroll
+    self.blink=blink
+	
+    self.font = graphics.Font()
+    self.font.LoadFont("../../fonts/helvR12.bdf")
+
+  def run(self):
+    self.clearDisplay()
+    count=0
+    while(not self.stopFlag):
+      if (self.blink and count%2==1):
+        self.setBg(graphics.Color(0, 0, 0))
+      else: 
+        self.setBg(graphics.Color(int(self.bgcolor[0]), int(self.bgcolor[1]), int(self.bgcolor[2])))
+      graphics.DrawText(self.canvas, self.font, 0, 20, graphics.Color(int(self.textcolor[0]), int(self.textcolor[1]), int(self.textcolor[2])), self.text)
+
+      time.sleep(0.1)
+      self.canvas = self.matrix.SwapOnVSync(self.canvas)
+      count += 1
+  
+  def setStopFlag(self, stopFlag):
+    self.stopFlag = stopFlag
+	
+  def clearDisplay(self):
+    self.canvas.Clear()
+	
+  def setBg(self, bgcolor):
+    for y in range(0, self.canvas.height):
+      graphics.DrawLine(self.canvas, 0, y, self.canvas.width, y, bgcolor)
+    
+
 
 class textdisplayer():
 
   width = 32
   cols = 64
+  thread = None
 
   def __init__(self):
     # Configuration for the matrix
@@ -20,31 +65,22 @@ class textdisplayer():
     options.hardware_mapping = 'adafruit-hat'
 
     self.matrix = RGBMatrix(options = options)
-    self.font = graphics.Font()
-    self.font.LoadFont("../../fonts/helvR12.bdf")
-    #self.textColor = graphics.Color(0, 0, 255)
+
     self.offscreen_canvas = self.matrix.CreateFrameCanvas()
     print("init done")
 
   def displayText(self, text, textcolor, bgcolor, scroll, blink):
-    pos = self.offscreen_canvas.width
     print("text: " + text)
-    self.clearDisplay()
-    self.setBg(graphics.Color(int(bgcolor[0]), int(bgcolor[1]), int(bgcolor[2])))
-    graphics.DrawText(self.offscreen_canvas, self.font, 0, 20, graphics.Color(int(textcolor[0]), int(textcolor[1]), int(textcolor[2])), text)
-
-    self.offscreen_canvas = self.matrix.SwapOnVSync(self.offscreen_canvas)
-
-  def clearDisplay(self):
-    self.offscreen_canvas.Clear()
-	
-  def setBg(self, bgcolor):
-    for y in range(0, self.width):
-      graphics.DrawLine(self.offscreen_canvas, 0, y, self.cols, y, bgcolor)
+    if (self.thread != None):
+      self.thread.setStopFlag(True)
+      self.thread.join()
+      self.thread = None
+    self.thread = DisplayerThread(self.offscreen_canvas, self.matrix, text, textcolor, bgcolor, scroll, blink)
+    self.thread.start()
 
 if __name__ == "__main__":
   disp = textdisplayer()
-  disp.clearDisplay()
   disp.displayText("Go Vikings", [255,0,0], [255,255,255], 'true', 'false')
   time.sleep(5)
+
 
