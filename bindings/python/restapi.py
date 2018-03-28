@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 from flask  import Flask, jsonify, request, render_template
-#from textdisplayer import textdisplayer
+from textdisplayer2 import textdisplayer
 
 display = { 'text': 'Hello Vikings :-)', 'status': 'on' }
-#textDisplayer = textdisplayer()
+textDisplayer = textdisplayer()
 mainRoute = '/display'
 app = Flask(__name__, static_url_path = mainRoute)
 
@@ -27,7 +27,7 @@ def routing():
         status = request.form.get('status')
         if text:
             display['text'] = text
-            #textDisplayer.displayText(text, 1)
+            textDisplayer.displayText(text, 0)
         if status:
             display['status'] = status
 
@@ -35,4 +35,4 @@ def routing():
         return jsonify({"status": False}), 201
 
 if __name__ == '__main__':
-    app.run(debug = False, host = '0.0.0.0', threaded = False, use_reloader = True)
+    app.run(debug = True, host = '127.0.0.1', threaded = False, use_reloader = False)
