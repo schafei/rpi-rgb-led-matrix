@@ -2,7 +2,7 @@
 from flask  import Flask, jsonify, request, render_template
 from textdisplayer2 import textdisplayer
 
-display = { 'text': 'Hello Vikings :-)', 'textcolor': ['255', '0', '0'], 'bgcolor': ['0', '0', '0'], 'scroll': false, 'blink': false }
+display = { 'text': 'Hello Vikings :-)', 'textcolor': ['255', '0', '0'], 'bgcolor': ['0', '0', '0'], 'scroll': 'false', 'blink': 'false' }
 textDisplayer = textdisplayer()
 mainRoute = '/display'
 app = Flask(__name__, static_url_path = mainRoute)
