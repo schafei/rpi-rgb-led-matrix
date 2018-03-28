@@ -28,7 +28,8 @@ def routing():
         display['bgcolor'] = request.form.get('bgcolor')
         display['scroll'] = request.form.get('scroll')
         display['blink'] = request.form.get('blink')
-        textDisplayer.displayText(display['text'], display['textcolor'], display['bgcolor'], display['scroll'], display['blink'])
+        print("text: " + display['text'])
+        #textDisplayer.displayText(display['text'], display['textcolor'], display['bgcolor'], display['scroll'], display['blink'])
 
         result = { display['text'], display['textcolor'], display['bgcolor'], display['scroll'], display['blink'] } 
         if json: return jsonify(result), 201
