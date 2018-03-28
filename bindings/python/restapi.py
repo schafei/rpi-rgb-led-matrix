@@ -2,7 +2,7 @@
 from flask  import Flask, jsonify, request, render_template
 from textdisplayer2 import textdisplayer
 
-display = { 'text': 'Hello Vikings :-)', 'status': 'on' }
+display = { 'text': 'Hello Vikings :-)', 'textcolor': ['255', '0', '0'], 'bgcolor': ['0', '0', '0'], 'scroll': false, 'blink': false }
 textDisplayer = textdisplayer()
 mainRoute = '/display'
 app = Flask(__name__, static_url_path = mainRoute)
@@ -23,12 +23,12 @@ def routing():
         else:    return '{ ' + display['text'] + ', ' + display['textcolor'] + ' , ' + display['bgcolor'] + ' , ' + display['scroll'] + ' , ' + display['blink'] + ' }' 
 
     elif request.method == 'PUT':
-        text = request.form.get('text')
-        textcolor = request.form.get('textcolor')
-        bgcolor = request.form.get('bgcolor')
-        scroll = request.form.get('scroll')
-        blink = request.form.get('blink')
-        textDisplayer.displayText(text, textcolor, bgcolor, scroll, blink)
+        display['text'] = request.form.get('text')
+        display['textcolor'] = request.form.get('textcolor')
+        display['bgcolor'] = request.form.get('bgcolor')
+        display['scroll'] = request.form.get('scroll')
+        display['blink'] = request.form.get('blink')
+        textDisplayer.displayText(display['text'], display['textcolor'], display['bgcolor'], display['scroll'], display['blink'])
 
         result = { display['text'], display['textcolor'], display['bgcolor'], display['scroll'], display['blink'] } 
         if json: return jsonify(result), 201
