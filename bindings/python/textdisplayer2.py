@@ -4,8 +4,6 @@ import sys
 
 from rgbmatrix import RGBMatrix, RGBMatrixOptions, graphics
 
-content = [ '', '']
-
 class textdisplayer():
 
   def __init__(self):
@@ -20,27 +18,30 @@ class textdisplayer():
 
     self.matrix = RGBMatrix(options = options)
     self.font = graphics.Font()
-    self.font.LoadFont("../../fonts/helvR12.bdf")
-    self.textColor = graphics.Color(0, 0, 255)
+    self.font.LoadFont("../../fonts/9x18.bdf")
+    #self.textColor = graphics.Color(0, 0, 255)
     self.offscreen_canvas = self.matrix.CreateFrameCanvas()
     print("init done")
 
-  def displayText(self, text, line):
+  def displayText(self, text, textcolor, bgcolor, scroll, blink):
     pos = self.offscreen_canvas.width
-    content[line] = text
-    print("text: " + text + " line: " + str(line) + " pos: " + str(pos))
-    graphics.DrawText(self.offscreen_canvas, self.font, 0, 14, self.textColor, content[0])
-    graphics.DrawText(self.offscreen_canvas, self.font, 0, 29, self.textColor, content[1])
+    print("text: " + text)
+	clearDisplay();
+	setBg(graphics.Color(bgcolor[0], bgcolor[1], bgcolor[2]));
+    graphics.DrawText(self.offscreen_canvas, self.font, 0, 28, graphics.Color(textcolor[0], textcolor[1], textcolor[2]), text)
 
     self.offscreen_canvas = self.matrix.SwapOnVSync(self.offscreen_canvas)
 
   def clearDisplay(self):
     self.offscreen_canvas.Clear()
+	
+  def setBg(self, bgcolor):
+    for y in range(0, options.rows):
+	  graphics.DrawLine(self.offscreen_canvas, 0, y, options.cols, y, bgcolor):
 
 if __name__ == "__main__":
   disp = textdisplayer()
   disp.clearDisplay()
-  disp.displayText("Go Vikings", 0)
-  disp.displayText("----------", 1)
+  #disp.displayText("Go Vikings", 0)
   time.sleep(5)
 
