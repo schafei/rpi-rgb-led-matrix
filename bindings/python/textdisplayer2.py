@@ -26,8 +26,8 @@ class textdisplayer():
   def displayText(self, text, textcolor, bgcolor, scroll, blink):
     pos = self.offscreen_canvas.width
     print("text: " + text)
-	clearDisplay();
-	setBg(graphics.Color(bgcolor[0], bgcolor[1], bgcolor[2]));
+    clearDisplay();
+    setBg(graphics.Color(bgcolor[0], bgcolor[1], bgcolor[2]));
     graphics.DrawText(self.offscreen_canvas, self.font, 0, 28, graphics.Color(textcolor[0], textcolor[1], textcolor[2]), text)
 
     self.offscreen_canvas = self.matrix.SwapOnVSync(self.offscreen_canvas)
@@ -37,7 +37,7 @@ class textdisplayer():
 	
   def setBg(self, bgcolor):
     for y in range(0, options.rows):
-	  graphics.DrawLine(self.offscreen_canvas, 0, y, options.cols, y, bgcolor):
+      graphics.DrawLine(self.offscreen_canvas, 0, y, options.cols, y, bgcolor)
 
 if __name__ == "__main__":
   disp = textdisplayer()
