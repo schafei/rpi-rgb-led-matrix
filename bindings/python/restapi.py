@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from flask  import Flask, jsonify, request, render_template
-#from textdisplayer2 import textdisplayer
+from textdisplayer2 import textdisplayer
 
 display = { 'text': 'Hello Vikings :-)', 'textcolor': ['255', '0', '0'], 'bgcolor': ['0', '0', '0'], 'scroll': 'false', 'blink': 'false' }
 textDisplayer = textdisplayer()
