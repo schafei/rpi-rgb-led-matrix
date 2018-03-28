@@ -5,9 +5,9 @@ from flask  import Flask, jsonify, request, render_template
 display = { 'text': 'Hello Vikings :-)', 'textcolor': ['255', '0', '0'], 'bgcolor': ['0', '0', '0'], 'scroll': 'false', 'blink': 'false' }
 textDisplayer = textdisplayer()
 mainRoute = '/display'
-app = Flask(__name__, static_url_path = mainRoute + '/static')
+app = Flask(__name__, static_url_path = mainRoute)
 
-@app.route(mainRoute, methods=['GET','POST','PUT','DELETE'])
+@app.route(mainRoute + '/', methods=['GET','POST','PUT','DELETE'])
 def routing():
 
     if request.method == 'GET':
