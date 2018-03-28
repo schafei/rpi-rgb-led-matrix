@@ -18,21 +18,21 @@ def routing():
     else:                    json = False
 
     if request.method == 'GET':
-        result = { display['text'], display['status'] } 
+        result = { display['text'], display['textcolor'], display['bgcolor'], display['scroll'], display['blink'] } 
         if json: return jsonify(result)
-        else:    return '{ ' + display['text'] + ', ' + display['status'] + ' }' 
+        else:    return '{ ' + display['text'] + ', ' + display['textcolor'] + ' , ' + display['bgcolor'] + ' , ' + display['scroll'] + ' , ' + display['blink'] + ' }' 
 
     elif request.method == 'PUT':
         text = request.form.get('text')
-        status = request.form.get('status')
-        if text:
-            display['text'] = text
-            textDisplayer.displayText(text, 0)
-        if status:
-            display['status'] = status
+        textcolor = request.form.get('textcolor')
+        bgcolor = request.form.get('bgcolor')
+        scroll = request.form.get('scroll')
+        blink = request.form.get('blink')
+        textDisplayer.displayText(text, textcolor, bgcolor, scroll, blink)
 
-        result = { display['text'], display['status'] }
-        return jsonify({"status": False}), 201
+        result = { display['text'], display['textcolor'], display['bgcolor'], display['scroll'], display['blink'] } 
+        if json: return jsonify(result), 201
+        else:    return '{ ' + display['text'] + ', ' + display['textcolor'] + ' , ' + display['bgcolor'] + ' , ' + display['scroll'] + ' , ' + display['blink'] + ' }', 201
 
 if __name__ == '__main__':
     app.run(debug = True, host = '127.0.0.1', threaded = False, use_reloader = False)
