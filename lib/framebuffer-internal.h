@@ -37,13 +37,13 @@ struct PixelDesignator {
   uint32_t mask;
 };
 
-class PixelMapper {
+class PixelDesignatorMap {
 public:
-  PixelMapper(int width, int height);
-  ~PixelMapper();
+  PixelDesignatorMap(int width, int height);
+  ~PixelDesignatorMap();
 
   // Get a writable version of the PixelDesignator. Outside Framebuffer used
-  // by the RGBMatrix to re-assign mappings to new PixelMappers.
+  // by the RGBMatrix to re-assign mappings to new PixelDesignatorMappers.
   PixelDesignator *get(int x, int y);
 
   inline int width() const { return width_; }
@@ -64,7 +64,7 @@ public:
   Framebuffer(int rows, int columns, int parallel,
               int scan_mode,
               const char* led_sequence, bool inverse_color,
-              PixelMapper **mapper);
+              PixelDesignatorMap **mapper);
   ~Framebuffer();
 
   // Initialize GPIO bits for output. Only call once.
@@ -72,6 +72,7 @@ public:
   static void InitGPIO(GPIO *io, int rows, int parallel,
                        bool allow_hardware_pulsing,
                        int pwm_lsb_nanoseconds,
+                       int dither_bits,
                        int row_address_type);
 
   // Set PWM bits used for output. Default is 11, but if you only deal with
@@ -91,7 +92,7 @@ public:
   }
   uint8_t brightness() { return brightness_; }
 
-  void DumpToMatrix(GPIO *io);
+  void DumpToMatrix(GPIO *io, int pwm_bits_to_show);
 
   void Serialize(const char **data, size_t *len) const;
   bool Deserialize(const char *data, size_t len);
@@ -144,7 +145,7 @@ private:
   gpio_bits_t *bitplane_buffer_;
   inline gpio_bits_t *ValueAt(int double_row, int column, int bit);
 
-  PixelMapper **shared_mapper_;  // Storage in RGBMatrix.
+  PixelDesignatorMap **shared_mapper_;  // Storage in RGBMatrix.
 };
 }  // namespace internal
 }  // namespace rgb_matrix

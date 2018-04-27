@@ -27,6 +27,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <algorithm>
+
 #include "gpio.h"
 
 namespace rgb_matrix {
@@ -45,18 +47,18 @@ static PinPulser *sOutputEnablePulser = NULL;
 #  define SUB_PANELS_ 2
 #endif
 
-PixelDesignator *PixelMapper::get(int x, int y) {
+PixelDesignator *PixelDesignatorMap::get(int x, int y) {
   if (x < 0 || y < 0 || x >= width_ || y >= height_)
     return NULL;
   return buffer_ + (y*width_) + x;
 }
 
-PixelMapper::PixelMapper(int width, int height)
+PixelDesignatorMap::PixelDesignatorMap(int width, int height)
   : width_(width), height_(height),
     buffer_(new PixelDesignator[width * height]) {
 }
 
-PixelMapper::~PixelMapper() {
+PixelDesignatorMap::~PixelDesignatorMap() {
   delete [] buffer_;
 }
 
@@ -145,9 +147,9 @@ private:
   int last_row_;
 };
 
-// The DirectABCDRowAddressSetter sets the address by one of 
+// The DirectABCDRowAddressSetter sets the address by one of
 // row pin ABCD for 32х16 matrix 1:4 multiplexing. The matrix has
-// 4 addressable rows. Row is selected by a low level on the 
+// 4 addressable rows. Row is selected by a low level on the
 // corresponding row address pin. Other row address pins must be in high level.
 //
 // Row addr| 0 | 1 | 2 | 3
@@ -161,7 +163,7 @@ public:
   DirectABCDLineRowAddressSetter(int double_rows, const HardwareMapping &h)
     : last_row_(-1) {
 	row_mask_ = h.a | h.b | h.c | h.d;
-		
+
 	row_lines_[0] = /*h.a |*/ h.b | h.c | h.d;
 	row_lines_[1] = h.a /*| h.b*/ | h.c | h.d;
 	row_lines_[2] = h.a | h.b /*| h.c */| h.d;
@@ -172,7 +174,7 @@ public:
 
   virtual void SetRowAddress(GPIO *io, int row) {
     if (row == last_row_) return;
-     
+
     gpio_bits_t row_address = row_lines_[row % 4];
 
     io->WriteMaskedBits(row_address, row_mask_);
@@ -181,7 +183,7 @@ public:
 
 private:
   gpio_bits_t row_lines_[4];
-  gpio_bits_t row_mask_;  
+  gpio_bits_t row_mask_;
   int last_row_;
 };
 
@@ -193,7 +195,7 @@ RowAddressSetter *Framebuffer::row_setter_ = NULL;
 Framebuffer::Framebuffer(int rows, int columns, int parallel,
                          int scan_mode,
                          const char *led_sequence, bool inverse_color,
-                         PixelMapper **mapper)
+                         PixelDesignatorMap **mapper)
   : rows_(rows),
     parallel_(parallel),
     height_(rows * parallel),
@@ -206,7 +208,7 @@ Framebuffer::Framebuffer(int rows, int columns, int parallel,
     shared_mapper_(mapper) {
   assert(hardware_mapping_ != NULL);   // Called InitHardwareMapping() ?
   assert(shared_mapper_ != NULL);  // Storage should be provided by RGBMatrix.
-  assert(rows_ >=8 && rows_ <= 64 && rows_ % 2 == 0);
+  assert(rows_ >=4 && rows_ <= 64 && rows_ % 2 == 0);
   if (parallel > hardware_mapping_->max_parallel_chains) {
     fprintf(stderr, "The %s GPIO mapping only supports %d parallel chain%s, "
             "but %d was requested.\n", hardware_mapping_->name,
@@ -227,7 +229,7 @@ Framebuffer::Framebuffer(int rows, int columns, int parallel,
   // Newly created PixelMappers then can just copy around PixelDesignators
   // from the parent PixelMapper opaquely without having to know the details.
   if (*shared_mapper_ == NULL) {
-    *shared_mapper_ = new PixelMapper(columns_, height_);
+    *shared_mapper_ = new PixelDesignatorMap(columns_, height_);
     for (int y = 0; y < height_; ++y) {
       for (int x = 0; x < columns_; ++x) {
         InitDefaultDesignator(x, y, (*shared_mapper_)->get(x, y));
@@ -284,6 +286,7 @@ Framebuffer::~Framebuffer() {
 /* static */ void Framebuffer::InitGPIO(GPIO *io, int rows, int parallel,
                                         bool allow_hardware_pulsing,
                                         int pwm_lsb_nanoseconds,
+                                        int dither_bits,
                                         int row_address_type) {
   if (sOutputEnablePulser != NULL)
     return;  // already initialized.
@@ -327,8 +330,10 @@ Framebuffer::~Framebuffer() {
   assert(result == all_used_bits);  // Impl: all bits declared in gpio.cc ?
 
   std::vector<int> bitplane_timings;
+  uint32_t timing_ns = pwm_lsb_nanoseconds;
   for (int b = 0; b < kBitPlanes; ++b) {
-    bitplane_timings.push_back(pwm_lsb_nanoseconds << b);
+    bitplane_timings.push_back(timing_ns);
+    if (b >= dither_bits) timing_ns *= 2;
   }
   sOutputEnablePulser = PinPulser::Create(io, h.output_enable,
                                           allow_hardware_pulsing,
@@ -544,7 +549,7 @@ void Framebuffer::CopyFrom(const Framebuffer *other) {
   memcpy(bitplane_buffer_, other->bitplane_buffer_, buffer_size_);
 }
 
-void Framebuffer::DumpToMatrix(GPIO *io) {
+void Framebuffer::DumpToMatrix(GPIO *io, int pwm_low_bit) {
   const struct HardwareMapping &h = *hardware_mapping_;
   gpio_bits_t color_clk_mask = 0;  // Mask of bits while clocking in.
   color_clk_mask |= h.p0_r1 | h.p0_g1 | h.p0_b1 | h.p0_r2 | h.p0_g2 | h.p0_b2;
@@ -557,8 +562,10 @@ void Framebuffer::DumpToMatrix(GPIO *io) {
 
   color_clk_mask |= h.clock;
 
+  // Depending if we do dithering, we might not always show the lowest bits.
+  const int start_bit = std::max(pwm_low_bit, kBitPlanes - pwm_bits_);
+
   const uint8_t half_double = double_rows_/2;
-  const int pwm_to_show = pwm_bits_;  // Local copy, might change in process.
   for (uint8_t row_loop = 0; row_loop < double_rows_; ++row_loop) {
     uint8_t d_row;
     switch (scan_mode_) {
@@ -575,7 +582,7 @@ void Framebuffer::DumpToMatrix(GPIO *io) {
 
     // Rows can't be switched very quickly without ghosting, so we do the
     // full PWM of one row before switching rows.
-    for (int b = kBitPlanes - pwm_to_show; b < kBitPlanes; ++b) {
+    for (int b = start_bit; b < kBitPlanes; ++b) {
       gpio_bits_t *row_data = ValueAt(d_row, 0, b);
       // While the output enable is still on, we can already clock in the next
       // data.
