@@ -25,16 +25,25 @@ class DisplayerThread(threading.Thread):
   def run(self):
     self.clearDisplay()
     count=0
+    pos = self.canvas.width
     while(not self.stopFlag):
       if (self.blink and count%2==1):
         self.setBg(graphics.Color(0, 0, 0))
       else: 
         self.setBg(graphics.Color(int(self.bgcolor[0]), int(self.bgcolor[1]), int(self.bgcolor[2])))
-      graphics.DrawText(self.canvas, self.font, 0, 20, graphics.Color(int(self.textcolor[0]), int(self.textcolor[1]), int(self.textcolor[2])), self.text)
+      
+      if (self.scroll):
+        len = graphics.DrawText(self.canvas, self.font, pos, 20, graphics.Color(int(self.textcolor[0]), int(self.textcolor[1]), int(self.textcolor[2])), self.text)
+        pos -= 1
+        if (pos + len < 0):
+          pos = self.canvas.width
+      else: 
+        graphics.DrawText(self.canvas, self.font, 0, 20, graphics.Color(int(self.textcolor[0]), int(self.textcolor[1]), int(self.textcolor[2])), self.text)
 
       time.sleep(0.1)
       self.canvas = self.matrix.SwapOnVSync(self.canvas)
       count += 1
+    self.clearDisplay()
   
   def setStopFlag(self, stopFlag):
     self.stopFlag = stopFlag
@@ -69,13 +78,14 @@ class textdisplayer():
     self.offscreen_canvas = self.matrix.CreateFrameCanvas()
     print("init done")
 
-  def displayText(self, text, textcolor, bgcolor, scroll, blink):
+  def displayText(self, imagepath, text, textcolor, bgcolor, scroll, blink):
     print("text: " + text)
     if (self.thread != None):
       self.thread.setStopFlag(True)
       self.thread.join()
       self.thread = None
-    self.thread = DisplayerThread(self.offscreen_canvas, self.matrix, text, textcolor, bgcolor, scroll, blink)
+    self.thread = DisplayerThread(self.offscreen_canvas, self.matrix, imagepath, text, textcolor, bgcolor, scroll, blink)
+    self.thread.daemon = True
     self.thread.start()
 
 if __name__ == "__main__":
