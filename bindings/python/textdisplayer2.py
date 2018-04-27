@@ -9,10 +9,11 @@ class DisplayerThread(threading.Thread):
 
   stopFlag = False
 
-  def __init__(self, canvas, matrix, text, textcolor, bgcolor, scroll, blink):
+  def __init__(self, canvas, matrix, imagepath, text, textcolor, bgcolor, scroll, blink):
     super(DisplayerThread, self).__init__()
     self.canvas=canvas
     self.matrix=matrix
+    self.imagepath=imagepath
     self.text=text
     self.textcolor=textcolor
     self.bgcolor=bgcolor
@@ -90,7 +91,7 @@ class textdisplayer():
 
 if __name__ == "__main__":
   disp = textdisplayer()
-  disp.displayText("Go Vikings", [255,0,0], [255,255,255], 'true', 'false')
+  disp.displayText("", "Go Vikings", [255,0,0], [255,255,255], 'true', 'false')
   time.sleep(5)
 
 
