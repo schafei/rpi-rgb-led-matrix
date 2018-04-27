@@ -1,3 +1,8 @@
+Example
+=======
+
+curl -H 'Content-Type: application/json' -X PUT -d '{"imagepath":"warning.gif","text":"KUBERNETES DOWN!","textcolor":[255,255,255],"bgcolor":[255,0,0],"scroll":true,"blink":true}' http://localhost:5000/display/
+
 Python bindings for RGB Matrix library
 ======================================
 
