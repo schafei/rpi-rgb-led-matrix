@@ -2,8 +2,8 @@
 import time
 import sys
 import threading
-
 from rgbmatrix import RGBMatrix, RGBMatrixOptions, graphics
+from PIL import Image
 
 class DisplayerThread(threading.Thread):
 
@@ -26,20 +26,36 @@ class DisplayerThread(threading.Thread):
   def run(self):
     self.clearDisplay()
     count=0
-    pos = self.canvas.width
+    #needed for scrolling, set x textposition to right end of display
+    xtxtposition = self.canvas.width
+    #default y textposition without picture
+    ytxtposition = 20
+
     while(not self.stopFlag):
       if (self.blink and count%2==1):
         self.setBg(graphics.Color(0, 0, 0))
       else: 
         self.setBg(graphics.Color(int(self.bgcolor[0]), int(self.bgcolor[1]), int(self.bgcolor[2])))
       
+      if (len(self.imagepath) > 0):
+        image = Image.open(self.imagepath)
+        imgheigth, imgwidth = image.size
+        thumbnailheigth = 20
+        ratio = imgheigth / float(thumbnailheigth)
+        thumbnailwidth = int(imgwidth / ratio)
+        image.thumbnail((thumbnailheigth, thumbnailwidth), Image.ANTIALIAS)
+        self.matrix.SetImage(image.convert('RGB'), (self.canvas.width / 2 - thumbnailwidth / 2), 0)
+#        print ("Ratio: " + str(ratio) + ", Image: " + str(imgwidth) + "x" + str(imgheigth) + ", Thumbnail: " + str(thumbnailwidth) + "x" + str(thumbnailheigth))
+        #change y textposition to the lowest possible
+        ytxtposition = 29
+      
       if (self.scroll):
-        len = graphics.DrawText(self.canvas, self.font, pos, 20, graphics.Color(int(self.textcolor[0]), int(self.textcolor[1]), int(self.textcolor[2])), self.text)
-        pos -= 1
-        if (pos + len < 0):
-          pos = self.canvas.width
+        length = graphics.DrawText(self.canvas, self.font, xtxtposition, ytxtposition, graphics.Color(int(self.textcolor[0]), int(self.textcolor[1]), int(self.textcolor[2])), self.text)
+        xtxtposition -= 1
+        if (xtxtposition + length < 0 ):
+          xtxtposition = self.canvas.width
       else: 
-        graphics.DrawText(self.canvas, self.font, 0, 20, graphics.Color(int(self.textcolor[0]), int(self.textcolor[1]), int(self.textcolor[2])), self.text)
+        graphics.DrawText(self.canvas, self.font, 0, ytxtposition, graphics.Color(int(self.textcolor[0]), int(self.textcolor[1]), int(self.textcolor[2])), self.text)
 
       time.sleep(0.1)
       self.canvas = self.matrix.SwapOnVSync(self.canvas)
@@ -56,9 +72,7 @@ class DisplayerThread(threading.Thread):
     for y in range(0, self.canvas.height):
       graphics.DrawLine(self.canvas, 0, y, self.canvas.width, y, bgcolor)
     
-
-
-class textdisplayer():
+class contentdisplayer():
 
   width = 32
   cols = 64
@@ -79,7 +93,7 @@ class textdisplayer():
     self.offscreen_canvas = self.matrix.CreateFrameCanvas()
     print("init done")
 
-  def displayText(self, imagepath, text, textcolor, bgcolor, scroll, blink):
+  def display(self, imagepath, text, textcolor, bgcolor, scroll, blink):
     print("text: " + text)
     if (self.thread != None):
       self.thread.setStopFlag(True)
@@ -90,8 +104,8 @@ class textdisplayer():
     self.thread.start()
 
 if __name__ == "__main__":
-  disp = textdisplayer()
-  disp.displayText("", "Go Vikings", [255,0,0], [255,255,255], 'true', 'false')
+  disp = contentdisplayer()
+  disp.display("", "Go Vikings", [255,0,0], [255,255,255], 'true', 'false')
   time.sleep(5)
 
 
