@@ -19,27 +19,27 @@ def routing():
     jsonify(display)
 
   elif request.method == 'PUT':
-	#text has to be set, all others are optional (see displayDefault)
-	display = displayDefault
-	display['text'] = request.json.get('text')
+    #text has to be set, all others are optional (see displayDefault)
+    display = displayDefault
+    display['text'] = request.json.get('text')
 	
-	#imagepath has priority, when imagepath and imagename are set
-	imagename = request.json.get('imagename')
-	if request.json.get('imagepath') is not None:
-	  display['imagepath'] = request.json.get('imagepath')
-	elif imagename is not None and ".gif" in imagename:
+    #imagepath has priority, when imagepath and imagename are set
+    imagename = request.json.get('imagename')
+    if request.json.get('imagepath') is not None:
+      display['imagepath'] = request.json.get('imagepath')
+    elif imagename is not None and ".gif" in imagename:
       display['imagepath'] = 'images/' + imagename
 	  
     if request.json.get('textcolor') is not None:
-	  display['textcolor'] = request.json.get('textcolor')
+      display['textcolor'] = request.json.get('textcolor')
     if request.json.get('bgcolor') is not None:
-	  display['bgcolor'] = request.json.get('bgcolor')
+      display['bgcolor'] = request.json.get('bgcolor')
     if request.json.get('scroll') is not None:
-	  display['scroll'] = request.json.get('scroll')
+      display['scroll'] = request.json.get('scroll')
     if request.json.get('blink') is not None:
-	  display['blink'] = request.json.get('blink')
+       display['blink'] = request.json.get('blink')
     
-	print("text: " + display['text'])
+    print("text: " + display['text'])
     contentdisplayer.display(display['imagepath'], display['text'], display['textcolor'], display['bgcolor'], display['scroll'], display['blink'])
     return jsonify(display), 201
 
