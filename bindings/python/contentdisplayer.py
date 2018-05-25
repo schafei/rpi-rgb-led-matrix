@@ -87,14 +87,14 @@ class contentdisplayer():
     options.parallel = 1
     options.gpio_slowdown = 2
     options.hardware_mapping = 'adafruit-hat'
-
+    options.pwm_lsb_nanoseconds = 250 
     self.matrix = RGBMatrix(options = options)
 
     self.offscreen_canvas = self.matrix.CreateFrameCanvas()
     print("init done")
 
   def display(self, imagepath, text, textcolor, bgcolor, scroll, blink):
-    print("text: " + text)
+    #print("text: " + text)
     if (self.thread != None):
       self.thread.setStopFlag(True)
       self.thread.join()
@@ -102,6 +102,12 @@ class contentdisplayer():
     self.thread = DisplayerThread(self.offscreen_canvas, self.matrix, imagepath, text, textcolor, bgcolor, scroll, blink)
     self.thread.daemon = True
     self.thread.start()
+
+  def stop(self):
+    #print("stop called")
+    if (self.thread != None):
+      self.thread.setStopFlag(True)
+      self.thread.join()
 
 if __name__ == "__main__":
   disp = contentdisplayer()
